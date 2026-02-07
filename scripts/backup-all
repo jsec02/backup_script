@@ -23,6 +23,7 @@ scripts=(
   "icon-backup"
   "ipython-backup"
   "nvim-backup"
+  "helix-backup"
   "package-backup"
   "bash-backup"
   "direnv-backup"
