@@ -10,10 +10,10 @@ A comprehensive backup automation system built on [Restic](https://github.com/re
 --------------------------------------------------------------------------------
 Language                      files          blank        comment           code
 --------------------------------------------------------------------------------
-Bourne Again Shell               19            158            179            328
-Markdown                          1              8              4             39
+Bourne Again Shell               17            146            163            312
+Markdown                          1              8              4             40
 --------------------------------------------------------------------------------
-SUM:                             20            166            183            367
+SUM:                             18            154            167            352
 --------------------------------------------------------------------------------
 ```
 <!-- CODE_STATISTICS_END -->
@@ -33,8 +33,6 @@ backup_system
     ├── database-backup
     ├── direnv-backup
     ├── helix-backup
-    ├── icon-backup
-    ├── ipython-backup
     ├── nvim-backup
     ├── package-backup
     ├── powershell-backup
@@ -47,6 +45,6 @@ backup_system
     ├── zellij-backup
     └── zshrc-backup
 
-3 directories, 20 files
+3 directories, 18 files
 ```
 <!-- PROJECT_STRUCTURE_END -->

@@ -20,8 +20,6 @@ scripts=(
   "vault-backup"
   "zshrc-backup"
   "zellij-backup"
-  "icon-backup"
-  "ipython-backup"
   "nvim-backup"
   "helix-backup"
   "package-backup"
