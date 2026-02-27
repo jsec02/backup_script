@@ -10,10 +10,10 @@ A comprehensive backup automation system built on [Restic](https://github.com/re
 --------------------------------------------------------------------------------
 Language                      files          blank        comment           code
 --------------------------------------------------------------------------------
-Bourne Again Shell               18            152            171            320
-Markdown                          1              8              4             38
+Bourne Again Shell               19            158            179            328
+Markdown                          1              8              4             39
 --------------------------------------------------------------------------------
-SUM:                             19            160            175            358
+SUM:                             20            166            183            367
 --------------------------------------------------------------------------------
 ```
 <!-- CODE_STATISTICS_END -->
@@ -41,11 +41,12 @@ backup_system
     ├── python-backup
     ├── sql-backup
     ├── sqliterc-backup
+    ├── ssh-backup
     ├── vault-backup
     ├── wt-backup
     ├── zellij-backup
     └── zshrc-backup
 
-3 directories, 19 files
+3 directories, 20 files
 ```
 <!-- PROJECT_STRUCTURE_END -->

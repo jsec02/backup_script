@@ -29,6 +29,7 @@ scripts=(
   "direnv-backup"
   "database-backup"
   "sql-backup"
+  "ssh-backup"
   "wt-backup"
 )
 
