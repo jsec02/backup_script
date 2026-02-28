@@ -8,12 +8,42 @@
 # - ArchLinux WSL: yay, uv, npm packages
 # - Windows: winget packages
 # - Debian Pi: apt packages
+# - Kali VM: apt packages
+# - RHEL VM: dnf packages
 
 set -euo pipefail
+
+VBOXMANAGE="/mnt/c/Program Files/Oracle/VirtualBox/VBoxManage.exe"
 
 # Setup temp directory
 PKG_DIR=~/temp
 mkdir -p "$PKG_DIR"
+
+# Starts VM if not running, collects packages, shuts down only if we started it
+backup_vm_packages() {
+  local vm_name=$1
+  local ssh_host=$2
+  local pkg_cmd=$3
+  local output_file=$4
+  local was_running=false
+  local state
+  state=$("$VBOXMANAGE" showvminfo "$vm_name" --machinereadable 2>/dev/null | grep "VMState=" | cut -d'"' -f2)
+  if [ "$state" = "running" ]; then
+    was_running=true
+  else
+    echo "  → Starting $vm_name..."
+    "$VBOXMANAGE" startvm "$vm_name" --type headless
+    until ssh -o ConnectTimeout=2 -o StrictHostKeyChecking=no "$ssh_host" "exit" 2>/dev/null; do
+      sleep 2
+    done
+  fi
+  echo "  → Collecting packages from $vm_name..."
+  ssh "$ssh_host" "$pkg_cmd" >"$output_file"
+  if [ "$was_running" = false ]; then
+    echo "  → Shutting down $vm_name..."
+    "$VBOXMANAGE" controlvm "$vm_name" acpipowerbutton
+  fi
+}
 
 echo "Collecting package lists..."
 
@@ -59,25 +89,26 @@ powershell.exe -Command "winget export --ignore-warnings -o $PKG_DIR/windows_des
 
 # --- 3. Debian Pi (remote SSH) ---
 echo "  → Debian Pi packages (apt)..."
-REMOTE_USER="master"
-REMOTE_HOST="10.0.0.181"
-REMOTE_TEMP="/home/master/temp/manual_debian_packages.txt"
-DEBIAN_CMD="comm -23 <(apt-mark showmanual | sort) <(apt-mark showauto | sort) > $REMOTE_TEMP"
+ssh pi "apt-mark showmanual" >"$PKG_DIR/debian_pi_apt.txt"
 
-ssh "$REMOTE_USER@$REMOTE_HOST" "bash -c '$DEBIAN_CMD'"
-ssh "$REMOTE_USER@$REMOTE_HOST" "cat $REMOTE_TEMP" >"$PKG_DIR/debian_pi_apt.txt"
+# --- 4. Kali VM ---
+echo "  → Kali VM packages (apt)..."
+backup_vm_packages "kalivm" "kali" "apt-mark showmanual" "$PKG_DIR/kali_apt.txt"
 
-# --- 4. Backup to restic ---
+# --- 5. RHEL VM ---
+echo "  → RHEL VM packages (dnf)..."
+backup_vm_packages "rhelvm" "rhel" "dnf repoquery --userinstalled --queryformat '%{name}' | grep -v 'Not root'" "$PKG_DIR/rhel_dnf.txt"
+
+# --- 6. Backup to restic ---
 echo "Backing up to restic..."
 restic -r "$R1" backup "$PKG_DIR" --tag packages
 restic -r "$R2" backup "$PKG_DIR" --tag packages
 
-# --- 5. Prune old snapshots ---
+# --- 7. Prune old snapshots ---
 echo "Pruning old snapshots..."
 restic -r "$R1" forget --tag packages --keep-last 1 --prune
 restic -r "$R2" forget --tag packages --keep-last 1 --prune
 
-# --- 6. Clean up ---
+# --- 8. Clean up ---
 rm -rf "$PKG_DIR"
-
 echo "Package lists backed up successfully"
