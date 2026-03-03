@@ -3,12 +3,11 @@
 # ================================================================================
 # =                              NFTABLES-BACKUP                                 =
 # ================================================================================
-
 # Collect nftables configs from all systems and backup to restic
 # - ArchLinux WSL: local /etc/nftables.conf
 # - Debian Pi: remote /etc/nftables.conf
 # - Kali VM: remote /etc/nftables.conf
-# - RHEL VM: remote /etc/nftables.conf
+# - RHEL VM: remote /etc/sysconfig/nftables.conf
 # - Backs up to local Pi (R1) and cloud B2 (R2)
 # - Prunes old snapshots, keeping last 1
 
@@ -22,9 +21,9 @@ mkdir -p "$BACKUP_DIR"
 backup_vm_nftables() {
   local vm_name=$1
   local ssh_host=$2
+  local nft_path=${3:-/etc/nftables.conf}
   local was_running=false
   local state
-
   state=$("$VBOXMANAGE" showvminfo "$vm_name" --machinereadable 2>/dev/null | grep "VMState=" | cut -d'"' -f2)
   if [ "$state" = "running" ]; then
     was_running=true
@@ -35,17 +34,14 @@ backup_vm_nftables() {
       sleep 2
     done
   fi
-
   echo "  → Collecting nftables.conf from $vm_name..."
   mkdir -p "$BACKUP_DIR/$ssh_host"
-  ssh "$ssh_host" "cat /etc/nftables.conf" >"$BACKUP_DIR/$ssh_host/nftables.conf"
-
+  ssh "$ssh_host" "cat $nft_path" >"$BACKUP_DIR/$ssh_host/nftables.conf"
   if [ "$was_running" = false ]; then
     echo "  → Shutting down $vm_name..."
     "$VBOXMANAGE" controlvm "$vm_name" acpipowerbutton
   fi
 }
-
 echo "Collecting nftables configs..."
 
 # --- 1. ArchLinux WSL (local) ---
@@ -64,7 +60,7 @@ backup_vm_nftables "kalivm" "kali"
 
 # --- 4. RHEL VM ---
 echo "  → RHEL VM..."
-backup_vm_nftables "rhelvm" "rhel"
+backup_vm_nftables "rhelvm" "rhel" "/etc/sysconfig/nftables.conf"
 
 # --- 5. Backup to restic ---
 echo "Backing up to restic..."
