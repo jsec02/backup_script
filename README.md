@@ -10,10 +10,10 @@ A comprehensive backup automation system built on [Restic](https://github.com/re
 --------------------------------------------------------------------------------
 Language                      files          blank        comment           code
 --------------------------------------------------------------------------------
-Bourne Again Shell               19            173            200            409
+Bourne Again Shell               19            171            200            405
 Markdown                          1              8              4             40
 --------------------------------------------------------------------------------
-SUM:                             20            181            204            449
+SUM:                             20            179            204            445
 --------------------------------------------------------------------------------
 ```
 <!-- CODE_STATISTICS_END -->
@@ -45,7 +45,7 @@ backup_system
     ├── wsl-backup
     ├── wt-backup
     ├── zellij-backup
-    └── zshrc-backup
+    └── zsh-backup
 
 3 directories, 20 files
 ```
