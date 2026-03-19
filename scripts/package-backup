@@ -88,7 +88,7 @@ npm ls -g --depth=0 --parseable | tail -n +2 | xargs -n1 basename >"$PKG_DIR/arc
 
 # --- 2. Windows (via PowerShell from WSL) ---
 echo "  → Windows packages (winget)..."
-powershell.exe -Command "winget export --ignore-warnings -o $PKG_DIR/windows_desktop_winget.json"
+/mnt/c/Program\ Files/PowerShell/7/pwsh.exe -Command "winget export --ignore-warnings -o $PKG_DIR/windows_desktop_winget.json"
 
 # --- 3. Debian Pi (remote SSH) ---
 echo "  → Debian Pi packages (apt)..."

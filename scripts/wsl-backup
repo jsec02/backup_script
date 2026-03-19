@@ -15,7 +15,7 @@ set -euo pipefail
 BACKUP_DIR=~/temp/wsl-config
 mkdir -p "$BACKUP_DIR"
 
-WINDOWS_USER=$(powershell.exe -Command "echo \$env:USERNAME" | tr -d '\r')
+WINDOWS_USER=$(/mnt/c/Program\ Files/PowerShell/7/pwsh.exe -Command "echo \$env:USERNAME" | tr -d '\r')
 WSLCONFIG_PATH="/mnt/c/Users/$WINDOWS_USER/.wslconfig"
 
 echo "Collecting WSL config files..."
