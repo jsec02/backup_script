@@ -1,0 +1,276 @@
+#!/usr/bin/env bash
+
+# ================================================================================
+# =                                    BACKUP                                    =
+# ================================================================================
+
+# Backup notes, code, configuration files, packages, and databases
+# - Collects from wsl, windows, and pi
+# - Sends to local pi (R1) and cloud B2 (R2) Restic repositories
+# - Prunes old snapshots, keeping last 1 or 7
+
+REPOSITORIES=("$R1" "$R2")
+WIN_HOME="/mnt/c/Users/master"
+
+restic_backup() {
+    local path="$1"
+    local tag="$2"
+    local keep="$3"
+
+    for repo in "${REPOSITORIES[@]}"; do
+        restic --repo "$repo" backup "$path" --tag "$tag"
+        restic --repo "$repo" forget --tag "$tag" --keep-last "$keep" --prune
+        echo "Backed up and pruned $tag in $repo"
+    done
+}
+
+backup_vault() { restic_backup "$HOME/vault" vault 7; }
+backup_python() { restic_backup "$HOME/python" python 7; }
+backup_bash() { restic_backup "$HOME/bash" bash 7; }
+backup_powershell() { restic_backup "$HOME/powershell" powershell 7; }
+backup_sql() { restic_backup "$HOME/sql" sql 7; }
+backup_nvim() { restic_backup "$HOME/.config/nvim" nvim 7; }
+backup_zellij() { restic_backup "$HOME/.config/zellij" zellij 7; }
+backup_wt() { restic_backup "$WIN_HOME/AppData/Local/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json" wt 1; }
+backup_helix() { restic_backup "$HOME/.config/helix" helix 7; }
+backup_kakoune() { restic_backup "$HOME/.config/kak" kakoune 7; }
+backup_direnv() { restic_backup "$HOME/.config/direnv" direnv 7; }
+backup_sqliterc() { restic_backup "$HOME/.sqliterc" sqliterc 1; }
+
+backup_databases() {
+    local DST_DIR="/tmp/databases"
+
+    # Collect from wsl
+    local WSL_SRC_DIR="$HOME/databases"
+    local WSL_DST_DIR="$DST_DIR/wsl"
+
+    mkdir --parents "$WSL_DST_DIR"
+
+    if [[ -d "$WSL_SRC_DIR" ]]; then
+        echo "Collecting wsl databases..."
+        rsync --archive --verbose --copy-links "$WSL_SRC_DIR" "$WSL_DST_DIR"
+    fi
+
+    # Collect from pi
+    local PI_SRC_DIR="/home/master/databases"
+    local PI_DST_DIR="$DST_DIR/pi"
+
+    mkdir --parents "$PI_DST_DIR"
+
+    # shellcheck disable=SC2029
+    if ssh master@10.0.0.181 "[[ -d $PI_SRC_DIR ]]"; then
+        echo "Collecting pi databases..."
+        rsync --archive --verbose --copy-links "master@10.0.0.181:$PI_SRC_DIR" "$PI_DST_DIR"
+    fi
+
+    # Backup
+    restic_backup "$DST_DIR" databases 7
+
+    # Cleanup
+    rm --recursive --force "$DST_DIR"
+}
+
+backup_ssh() {
+    local DST_DIR="/tmp/ssh"
+    local SRC_DIR="$HOME/.ssh"
+
+    mkdir --parents "$DST_DIR"
+
+    # Collect config
+    local CONFIG="$SRC_DIR/config"
+
+    if [[ -f "$CONFIG" ]]; then
+        echo "Collecting ssh config..."
+        rsync --archive --verbose --copy-links "$CONFIG" "$DST_DIR"
+    fi
+
+    # Collect private key
+    local PRIVATE_KEY="$SRC_DIR/id_ed25519"
+
+    if [[ -f "$PRIVATE_KEY" ]]; then
+        echo "Collecting private key..."
+        rsync --archive --verbose --copy-links "$PRIVATE_KEY" "$DST_DIR"
+    fi
+
+    # Collect private key
+    local PUBLIC_KEY="$SRC_DIR/id_ed25519.pub"
+
+    if [[ -f "$PUBLIC_KEY" ]]; then
+        echo "Collecting public key..."
+        rsync --archive --verbose --copy-links "$PUBLIC_KEY" "$DST_DIR"
+    fi
+
+    # Backup
+    restic_backup "$DST_DIR" ssh 1
+
+    # Cleanup
+    rm --recursive --force "$DST_DIR"
+}
+
+backup_nftables() {
+    local DST_DIR="/tmp/nftables"
+
+    # Collect from wsl
+    local WSL_SRC_FILE=/etc/nftables.conf
+    local WSL_DST_DIR="$DST_DIR/wsl"
+
+    mkdir --parents "$WSL_DST_DIR"
+
+    if [[ -f "$WSL_SRC_FILE" ]]; then
+        echo "Collecting wsl nftables.conf..."
+        rsync --archive --verbose --copy-links "$WSL_SRC_FILE" "$WSL_DST_DIR"
+    fi
+
+    # Collect from pi
+    local PI_SRC_FILE=/etc/nftables.conf
+    local PI_DST_DIR="$DST_DIR/pi"
+
+    mkdir --parents "$PI_DST_DIR"
+
+    # shellcheck disable=SC2029
+    if ssh master@10.0.0.181 "[[ -f $PI_SRC_FILE ]]"; then
+        echo "Collecting pi nftables.conf..."
+        rsync --archive --verbose --copy-links "master@10.0.0.181:$PI_SRC_FILE" "$PI_DST_DIR"
+    fi
+
+    # Backup
+    restic_backup "$DST_DIR" nftables 1
+
+    # Cleanup
+    rm --recursive --force "$DST_DIR"
+}
+
+backup_wsl() {
+    local DST_DIR="/tmp/wsl"
+
+    # Collect from wsl
+    local WSL_SRC_FILE="/etc/wsl.conf"
+    local WSL_DST_DIR="$DST_DIR/wsl"
+
+    mkdir --parents "$WSL_DST_DIR"
+
+    if [[ -f "$WSL_SRC_FILE" ]]; then
+        echo "Collecting wsl wsl.conf..."
+        rsync --archive --verbose --copy-links "$WSL_SRC_FILE" "$WSL_DST_DIR"
+    fi
+
+    # Collect from windows
+    local WINDOWS_SRC_FILE="$WIN_HOME/.wslconfig"
+    local WINDOWS_DST_DIR="$DST_DIR/windows"
+
+    mkdir --parents "$WINDOWS_DST_DIR"
+
+    if [[ -f "$WINDOWS_SRC_FILE" ]]; then
+        echo "Collecting windows .wslconfig..."
+        rsync --archive --verbose --copy-links "$WINDOWS_SRC_FILE" "$WINDOWS_DST_DIR"
+    fi
+
+    # Backup
+    restic_backup "$DST_DIR" wsl 1
+
+    # Cleanup
+    rm --recursive --force "$DST_DIR"
+}
+
+backup_zsh() {
+    local DST_DIR="/tmp/zsh"
+
+    mkdir --parents "$DST_DIR"
+
+    # Collect .zshrc
+    local ZSHRC="$HOME/.zshrc"
+
+    if [[ -f "$ZSHRC" ]]; then
+        echo "Collecting .zshrc..."
+        rsync --archive --verbose --copy-links "$ZSHRC" "$DST_DIR"
+    fi
+
+    # Collect .zshenv
+    local ZSHENV="$HOME/.zshenv"
+
+    if [[ -f "$ZSHENV" ]]; then
+        echo "Collecting .zshenv..."
+        rsync --archive --verbose --copy-links "$ZSHENV" "$DST_DIR"
+    fi
+
+    # Collect .zshenv.local
+    local ZSHENV_LOCAL="$HOME/.zshenv.local"
+
+    if [[ -f "$ZSHENV_LOCAL" ]]; then
+        echo "Collecting .zshenv.local..."
+        rsync --archive --verbose --copy-links "$ZSHENV_LOCAL" "$DST_DIR"
+    fi
+
+    # Backup
+    restic_backup "$DST_DIR" zsh 1
+
+    # Cleanup
+    rm --recursive --force "$DST_DIR"
+}
+
+backup() {
+    local targets=("${@:-all}")
+
+    if [[ "${targets[0]}" == "all" ]]; then
+        backup_vault
+        backup_python
+        backup_bash
+        backup_powershell
+        backup_sql
+        backup_nvim
+        backup_zellij
+        backup_helix
+        backup_kakoune
+        backup_ssh
+        backup_direnv
+        backup_sqliterc
+        backup_databases
+        backup_nftables
+        backup_wsl
+        backup_wt
+        backup_zsh
+        return
+    fi
+
+    for target in "${targets[@]}"; do
+        local function="backup_$target"
+
+        if ! declare -f "$function" >/dev/null; then
+            echo "Unknown target: $target" >&2
+            exit 1
+        fi
+
+        "$function"
+    done
+}
+
+backup_integrity() {
+    for repo in "${REPOSITORIES[@]}"; do
+        restic --repo "$repo" check --read-data-subset=5%
+    done
+}
+
+backup_stats() {
+    for repo in "${REPOSITORIES[@]}"; do
+        restic --repo "$repo" stats --mode=raw-data
+    done
+}
+
+main() {
+    local cmd="${1:-backup}"
+    shift
+
+    case "$cmd" in
+        backup) backup "$@" ;;
+        integrity) backup_integrity ;;
+        stats) backup_stats ;;
+        *)
+            echo "$(basename "$0") usage: {backup|integrity|stats}"
+            exit 1
+            ;;
+    esac
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    main "$@"
+fi
