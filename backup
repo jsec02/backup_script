@@ -22,7 +22,7 @@ restic_backup() {
     for path in "$@"; do
         [[ -e "$path" ]] && paths+=("$path")
     done
-    [[ ${#paths[@]} -eq 0 ]] && return
+    ((${#paths[@]} == 0)) && return
 
     for repo in "${REPOSITORIES[@]}"; do
         restic --repo "$repo" backup "${paths[@]}" --tag "$tag"
