@@ -60,6 +60,7 @@ backup() {
         backup_bash
         backup_powershell
         backup_sql
+        backup_dotfiles
         backup_nvim
         backup_zellij
         backup_helix
