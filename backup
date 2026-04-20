@@ -69,6 +69,9 @@ backup() {
         backup_sql
         backup_dotfiles
         backup_nvim
+        backup_lightdm
+        backup_autostart
+        backup_redshift
         backup_yazi
         backup_zellij
         backup_helix
