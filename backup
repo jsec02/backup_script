@@ -40,6 +40,7 @@ backup_sql() { restic_backup sql 7 "$HOME/sql"; }
 backup_dotfiles() { restic_backup dotfiles 7 "$HOME/dotfiles"; }
 backup_nvim() { restic_backup nvim 7 "$HOME/.config/nvim"; }
 backup_yazi() { restic_backup yazi 7 "$HOME/.config/yazi"; }
+backup_wireguard() { restic_backup wireguard 1 "/etc/wireguard"; }
 backup_lightdm() { restic_backup lightdm 1 "/etc/lightdm/lightdm.conf"; }
 backup_autostart() { restic_backup autostart 1 "$HOME/.config/autostart"; }
 backup_redshift() { restic_backup redshift 1 "$HOME/.config/redshift"; }
@@ -73,6 +74,7 @@ backup() {
         backup_autostart
         backup_redshift
         backup_yazi
+        backup_wireguard
         backup_zellij
         backup_helix
         backup_kakoune
