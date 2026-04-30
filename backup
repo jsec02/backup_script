@@ -58,7 +58,7 @@ backup_ssh() { restic_backup ssh 1 "$HOME/.ssh"; }
 backup_nftables() { restic_backup nftables 1 "/etc/nftables.conf"; }
 backup_history() { restic_backup history 1 "$HOME/.zsh_history"; }
 backup_wsl() { restic_backup wsl 1 "/etc/wsl.conf" "$WIN_HOME/.wslconfig"; }
-backup_zsh() { restic_backup zsh 1 "$HOME/.zshrc" "$HOME/.zshenv" "$HOME/.zshenv.local"; }
+backup_zsh() { restic_backup zsh 1 "$HOME/.zshrc" "$HOME/.zshenv" "$HOME/.zshenv.local" "$HOME/.zprofile"; }
 
 backup() {
     local targets=("${@:-all}")
