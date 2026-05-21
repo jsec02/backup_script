@@ -35,6 +35,7 @@ restic_backup() {
     done
 }
 
+backup_atuin() { restic_backup atuin 7 "$HOME/.config/atuin"; }
 backup_autostart() { restic_backup autostart 1 "$HOME/.config/autostart/deskflow.desktop" "$HOME/.config/autostart/redshift.desktop"; }
 backup_bash() { restic_backup bash 7 "$HOME/bash"; }
 backup_databases() { restic_backup databases 7 "$HOME/databases"; }
@@ -43,7 +44,7 @@ backup_dotfiles() { restic_backup dotfiles 7 "$HOME/dotfiles"; }
 backup_fzf() { restic_backup fzf 7 "$HOME/.config/fzf"; }
 backup_git() { restic_backup git 1 "$HOME/.gitconfig"; }
 backup_helix() { restic_backup helix 7 "$HOME/.config/helix"; }
-backup_history() { restic_backup history 7 "$HOME/.zsh_history"; }
+backup_history() { restic_backup history 7 "$HOME/.local/share/atuin/history.db"; }
 backup_icons() { restic_backup icons 1 "$HOME/icons"; }
 backup_kakoune() { restic_backup kakoune 7 "$HOME/.config/kak"; }
 backup_lightdm() { restic_backup lightdm 1 "/etc/lightdm/lightdm.conf"; }
