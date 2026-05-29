@@ -37,6 +37,7 @@ restic_backup() {
 
 backup_atuin() { restic_backup atuin 7 "$HOME/.config/atuin"; }
 backup_autostart() { restic_backup autostart 1 "$HOME/.config/autostart/deskflow.desktop" "$HOME/.config/autostart/redshift.desktop" "$HOME/.config/autostart/xset.desktop"; }
+backup_inventory() { restic_backup inventory 7 "$HOME/inventory"; }
 backup_bash() { restic_backup bash 7 "$HOME/bash"; }
 backup_databases() { restic_backup databases 7 "$HOME/databases"; }
 backup_direnv() { restic_backup direnv 1 "$HOME/.config/direnv"; }
@@ -78,6 +79,7 @@ backup() {
     if [[ "${targets[0]}" == "all" ]]; then
         backup_autostart
         backup_bash
+        backup_inventory
         backup_databases
         backup_direnv
         backup_dotfiles
