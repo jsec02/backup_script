@@ -37,13 +37,13 @@ backup() {
     if [[ "${targets[0]}" == "all" ]]; then
         while read -r tag paths; do
             restic_backup "$tag" $paths
-        done < <(python "$HOME/inventory/parser.py" paths "$HOSTNAME")
+        done < <(python3 "$HOME/inventory/parser.py" paths "$HOSTNAME")
 
         return
     fi
 
     for target in "${targets[@]}"; do
-        read -r tag paths < <(python "$HOME/inventory/parser.py" path "$HOSTNAME" "$target")
+        read -r tag paths < <(python3 "$HOME/inventory/parser.py" path "$HOSTNAME" "$target")
         restic_backup "$tag" $paths
     done
 }
